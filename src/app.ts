@@ -67,7 +67,7 @@ async function start() {
             app.listen(port, () : void=>{
                 console.log(`${new Date().toISOString()} - Service started on port ${port}`);
             });
-            connected = false;
+            connected = true;
         }).catch((error: Error): void=>{
             console.log(`${new Date().toISOString()} - Unable to establish database connection.`);
             if(retry===1){

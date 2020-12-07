@@ -29,7 +29,7 @@ app.use(cookieParser(COOKIE_SECRET));
 app.use(verifyUserToken);
 app.use(express.json());
 
-app.use(routes);
+app.use("/api",routes);
 
 function notFound (req: Request, res: Response, next: NextFunction) : void {
     res.status(404);

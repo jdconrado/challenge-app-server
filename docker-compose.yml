@@ -1,4 +1,4 @@
-version: 3.8
+version: "3.8"
 services:
   db:
     image:  postgres
@@ -23,7 +23,7 @@ services:
       - db
       - redis
     environment:
-      DATABASE_URL: db://vesta_user:vesta_password@postgres:5432/vesta
+      DATABASE_URL: db://vesta_user:vesta_password@db:5432/vesta
       NODE_ENV: PRODUCTION
       COOKIE_SECRET: zRjffya9CFS1GUfevUIHYJ9HdV0lZS9MChangeLater
       JWT_SECRET: Tb8GkeYyuaSzV2bCc1wuq5WgviIWV6NYChangeLater

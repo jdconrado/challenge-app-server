@@ -24,7 +24,7 @@ createConnection().then( (): void=>{
     app.use(morgan('dev'));
     app.use(cors({
         credentials: true,
-        origin: ["*"]
+        origin: ["http://localhost:4200"]
     }));
     app.use(cookieParser(COOKIE_SECRET));
     app.use(verifyUserToken);

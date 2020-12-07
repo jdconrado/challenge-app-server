@@ -54,7 +54,7 @@ export default class Product extends BaseEntity{
 
         if (filters.title !== undefined){
             query+= "product.title like :title";
-            values.title = filters.title;
+            values.title = `%${filters.title}%`;
         }
         if (filters.categoryId !== undefined){
             query = this.formQuery(query, "product.categoryId = :categoryId");
@@ -72,14 +72,18 @@ export default class Product extends BaseEntity{
         }
         if (query===""){
             return this.createQueryBuilder("product")
+            .leftJoinAndSelect("product.category", "category")
             .limit(20)
             .offset(filters.page*20)
+            .orderBy("product.id", "DESC")
             .getMany();
         }
         return this.createQueryBuilder("product")
             .where(query, values)
+            .leftJoinAndSelect("product.category", "category")
             .limit(20)
             .offset(filters.page*20)
+            .orderBy("product.id", "DESC")
             .getMany();
     }
 
@@ -99,11 +103,20 @@ export default class Product extends BaseEntity{
             .getOne();
     }
 
+    public static getOneWithCategory(id: number){
+        return this.createQueryBuilder("product")
+            .leftJoinAndSelect("product.category", "category")
+            .where("product.id = :id", {id: id})
+            .getOne();
+    }
+
     public static getUserProducts(userId: number, page: number){
         return this.createQueryBuilder("product")
             .where("product.userId = :userId",{userId: userId})
+            .leftJoinAndSelect("product.category", "category")
             .limit(20)
             .offset(page*20)
+            .orderBy("product.id", "DESC")
             .getMany();
     }
 }

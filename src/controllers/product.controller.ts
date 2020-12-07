@@ -8,15 +8,17 @@ import {getValidationErrorConstraints as getErrors} from "../helpers";
 
 interface productInterface{
     title?: string
-    categoryId?: number
+    category?: {
+        id: number
+    }
     price?:  number
     stock?: number
 }
 
 async function createProduct(req: Request, res: Response, next: NextFunction) {
     let data: productInterface =  req.body.data;
-    if ( data !== undefined){
-        const category = await Category.findOne({id: data.categoryId});
+    if ( data !== undefined && data.category!== undefined){
+        const category = await Category.findOne({id: data.category.id});
         const user  = await User.findOne({id: req.user.id});
         if (category !== undefined && user !== undefined){
             const product: Product = new Product();
@@ -43,7 +45,8 @@ async function createProduct(req: Request, res: Response, next: NextFunction) {
                     });
                 } catch (error) {
                     console.log(error);
-                    return res.status(500).end();
+                    res.status(500);
+                    return next({error: new Error("Internal server Error")});
                 }
             }
         }else{
@@ -58,12 +61,15 @@ async function createProduct(req: Request, res: Response, next: NextFunction) {
 
 async function getProduct(req: Request, res: Response, next: NextFunction) {
     if(req.params.id !== undefined){
-        const product = await Product.findOne({id: parseInt(req.params.id)});
+        const product = await Product.getOneWithCategory(parseInt(req.params.id));
         if (product !== undefined){
             res.status(200);
             return res.json({
                 data:{
-                    product: product
+                    product: {
+                        ...product,
+                        userId : req.user.id
+                    }
                 }
             });
         }else{
@@ -87,8 +93,8 @@ async function updateProduct(req: Request, res: Response, next: NextFunction){
                     return next({error: new Error("Not authorized to peform this action.")});
                 }
 
-                if (data.categoryId !== undefined){
-                    const category = await Category.findOne({id: data.categoryId});
+                if (data.category !== undefined){
+                    const category = await Category.findOne({id: data.category.id});
                     if (category !== undefined)
                         product.category = category;
                 }
@@ -123,7 +129,8 @@ async function updateProduct(req: Request, res: Response, next: NextFunction){
                         });
                     } catch (error) {
                         console.log(error);
-                        return res.status(500).end();
+                        res.status(500);
+                        return next({error: new Error("Internal server Error")});
                     }
                 }
             }else{
@@ -153,7 +160,8 @@ async function deleteProduct(req: Request, res: Response, next: NextFunction){
                 return res.status(200).end();
             }catch(error){
                 console.log(error);
-                return res.status(500).end();
+                res.status(500);
+                return next({error: new Error("Internal server Error")});
             }
         }else{
             return next();

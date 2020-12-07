@@ -37,7 +37,8 @@ async function createCategory(req: Request, res: Response, next: NextFunction) {
                 });
             } catch (error) {
                 console.log(error);
-                return res.status(500).end();
+                res.status(500);
+                return next({error: new Error("Internal server Error")});
             }
         }
     }else{

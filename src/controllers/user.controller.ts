@@ -32,7 +32,7 @@ async function registerUser(req: Request, res: Response, next: NextFunction){
         const errorList = await validate(user);
         if(errorList.length > 0){
             res.status(422);
-            return next({error: new Error("Data has not passed the validations."), errorList: getErrors(errorList)});
+            return next({error: new Error("Data has not passed the validations, please check the information provided."), errorList: getErrors(errorList)});
         }else{
             try{
                 const savedUser = await user.save();
@@ -57,7 +57,8 @@ async function registerUser(req: Request, res: Response, next: NextFunction){
                 });
             }catch(error){
                 console.log(error);
-                return res.status(500).end();
+                res.status(500);
+                return next({error: new Error("Internal server Error")});
             }
         }
     }else{
@@ -88,7 +89,15 @@ async function loginUser(req: Request, res: Response, next: NextFunction){
                                 secure: httpsOnly
                             });
                         }
-                        res.status(200).end();
+                        res.status(200);
+                        return res.json({
+                            data:{
+                                user:{
+                                    id: user.id,
+                                    name: user.name
+                                }
+                            }
+                        });
                     });
                 }else{
                     return incorrectEmailOrPassword(res, next);

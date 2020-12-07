@@ -22,6 +22,7 @@ export default class Category extends BaseEntity{
         return this.createQueryBuilder("category")
             .select("category.id")
             .addSelect("category.name")
+            .cache("categories", 120000)
             .getMany()
     }
 

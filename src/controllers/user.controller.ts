@@ -3,7 +3,7 @@ import {validate} from "class-validator";
 import jwt from "jsonwebtoken";
 import User from "../entities/User";
 
-import {getValidationErrorConstraints as getErrors} from "../helpers";
+import {getValidationErrorConstraints as getErrors,} from "../helpers";
 
 interface userData {
     name?: string
@@ -17,53 +17,47 @@ const httpsOnly = process.env.NODE_ENV === "PRODUCTION";
 
 async function registerUser(req: Request, res: Response, next: NextFunction){
     const data: userData = req.body.data;
-    if ( data !== undefined){
-
-        const exist = await User.findOne({email: data.email.trim()});
-        if (exist !== undefined){
-            res.status(422);
-            return next({error: new Error("This email is already taken.")});
-        }
-        const user : User = new User();
-        user.name = data.name?.trim() || "";
-        user.lastName = data.lastName?.trim() || "";
-        user.email = data.email.trim();
-        user.password = data.password;
-        const errorList = await validate(user);
-        if(errorList.length > 0){
-            res.status(422);
-            return next({error: new Error("Data has not passed the validations, please check the information provided."), errorList: getErrors(errorList)});
-        }else{
-            try{
-                const savedUser = await user.save();
-                jwt.sign({u_id: savedUser.id},JWT_SECRET,{expiresIn: "4h"}, (error, token)=>{
-                    if(!error){
-                        res.cookie('ujtk',token, {
-                            signed: true,
-                            httpOnly: true,
-                            maxAge: 4*3600000,
-                            secure: httpsOnly
-                        });
-                    }
-                    res.status(200);
-                    return res.json({
-                        data:{
-                            user:{
-                                id: savedUser.id,
-                                name: savedUser.name
-                            }
-                        }
-                    });
-                });
-            }catch(error){
-                console.log(error);
-                res.status(500);
-                return next({error: new Error("Internal server Error")});
-            }
-        }
+    const exist = await User.findOne({email: data.email.trim()});
+    if (exist !== undefined){
+        res.status(422);
+        return next({error: new Error("This email is already taken.")});
+    }
+    const user : User = new User();
+    user.name = data.name?.trim() || "";
+    user.lastName = data.lastName?.trim() || "";
+    user.email = data.email.trim();
+    user.password = data.password;
+    const errorList = await validate(user);
+    if(errorList.length > 0){
+        res.status(422);
+        return next({error: new Error("Data has not passed the validations, please check the information provided."), errorList: getErrors(errorList)});
     }else{
-        res.status(400);
-        return next({error:new Error("Must provide user data.")});
+        try{
+            const savedUser = await user.save();
+            jwt.sign({u_id: savedUser.id},JWT_SECRET,{expiresIn: "4h"}, (error, token)=>{
+                if(!error){
+                    res.cookie('ujtk',token, {
+                        signed: true,
+                        httpOnly: true,
+                        maxAge: 4*3600000,
+                        secure: httpsOnly
+                    });
+                }
+                res.status(200);
+                return res.json({
+                    data:{
+                        user:{
+                            id: savedUser.id,
+                            name: savedUser.name
+                        }
+                    }
+                });
+            });
+        }catch(error){
+            console.log(error);
+            res.status(500);
+            return next({error: new Error("Internal server Error")});
+        }
     }
 }
 
@@ -74,7 +68,7 @@ function incorrectEmailOrPassword(res: Response, next: NextFunction){
 
 async function loginUser(req: Request, res: Response, next: NextFunction){
     const data: userData = req.body.data;
-    if(data!== undefined && data.email.trim()!== "" &&data.password !== ""){
+    if(data.email.trim()!== "" &&data.password !== ""){
         if(data.password.length >= 7){
             const user = await User.findOne({email: data.email.trim()});
             if (user !== undefined){

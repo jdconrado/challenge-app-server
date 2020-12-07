@@ -76,6 +76,7 @@ export default class Product extends BaseEntity{
             .limit(20)
             .offset(filters.page*20)
             .orderBy("product.id", "DESC")
+            .cache(`products_${filters.page}`, 10000)
             .getMany();
         }
         return this.createQueryBuilder("product")

@@ -1,4 +1,5 @@
 import {Request, Response, NextFunction} from "express";
+import { getConnection } from "typeorm";
 import {validate} from "class-validator";
 import Product, {Filters} from "../entities/Product";
 import Category from "../entities/Category";
@@ -17,7 +18,7 @@ interface productInterface{
 
 async function createProduct(req: Request, res: Response, next: NextFunction) {
     let data: productInterface =  req.body.data;
-    if ( data !== undefined && data.category!== undefined){
+    if (data.category!== undefined){
         const category = await Category.findOne({id: data.category.id});
         const user  = await User.findOne({id: req.user.id});
         if (category !== undefined && user !== undefined){
@@ -35,6 +36,7 @@ async function createProduct(req: Request, res: Response, next: NextFunction) {
             }else{
                 try {
                     await product.save();
+                    await getConnection().queryResultCache!.remove(["products_*"]);
                     res.status(200);
                     return res.json({
                         data:{
@@ -55,7 +57,7 @@ async function createProduct(req: Request, res: Response, next: NextFunction) {
         }
     }else{
         res.status(400);
-        return next({error:new Error("Must provide product data.")});
+        return next({error:new Error("Must provide category data for the produt.")});
     }
 }
 
@@ -84,61 +86,56 @@ async function getProduct(req: Request, res: Response, next: NextFunction) {
 async function updateProduct(req: Request, res: Response, next: NextFunction){
     if(req.params.id !== undefined){
         let data: productInterface =  req.body.data;
-        if ( data !== undefined){
-            const product = await Product.getOneWithUser(parseInt(req.params.id));
-            if(product !== undefined){
-                
-                if(product.user.id !== req.user.id){
-                    res.status(401);
-                    return next({error: new Error("Not authorized to peform this action.")});
-                }
+        const product = await Product.getOneWithUser(parseInt(req.params.id));
+        if(product !== undefined){
+            
+            if(product.user.id !== req.user.id){
+                res.status(401);
+                return next({error: new Error("Not authorized to peform this action.")});
+            }
 
-                if (data.category !== undefined){
-                    const category = await Category.findOne({id: data.category.id});
-                    if (category !== undefined)
-                        product.category = category;
-                }
-                if (data.price !== undefined){
-                    product.price = data.price;
-                }
-                if (data.stock !== undefined){
-                    product.stock = data.stock;
-                }
-                if (data.title !== undefined){
-                    product.title = data.title;
-                }
-                const errorList = await validate(product);
-                if(errorList.length > 0){
-                    res.status(422);
-                    return next({error: new Error("Data has not passed the validations."), errorList});
-                }else{
-                    try {
-                        await product.save();
-                        res.status(200);
-                        return res.json({
-                            data:{
-                                product: {
-                                    id: product.id,
-                                    title: product.title,
-                                    price: product.price,
-                                    stock: product.stock,
-                                    createdAt: product.createdAt,
-                                    updatedAt: product.updatedAt
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.log(error);
-                        res.status(500);
-                        return next({error: new Error("Internal server Error")});
-                    }
-                }
+            if (data.category !== undefined){
+                const category = await Category.findOne({id: data.category.id});
+                if (category !== undefined)
+                    product.category = category;
+            }
+            if (data.price !== undefined){
+                product.price = data.price;
+            }
+            if (data.stock !== undefined){
+                product.stock = data.stock;
+            }
+            if (data.title !== undefined){
+                product.title = data.title;
+            }
+            const errorList = await validate(product);
+            if(errorList.length > 0){
+                res.status(422);
+                return next({error: new Error("Data has not passed the validations."), errorList});
             }else{
-                return next();
+                try {
+                    await product.save();
+                    res.status(200);
+                    return res.json({
+                        data:{
+                            product: {
+                                id: product.id,
+                                title: product.title,
+                                price: product.price,
+                                stock: product.stock,
+                                createdAt: product.createdAt,
+                                updatedAt: product.updatedAt
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.log(error);
+                    res.status(500);
+                    return next({error: new Error("Internal server Error")});
+                }
             }
         }else{
-            res.status(400);
-            return next({error:new Error("Must provide product data.")});
+            return next();
         }
     }else{
         res.status(422);
@@ -174,22 +171,17 @@ async function deleteProduct(req: Request, res: Response, next: NextFunction){
 
 async function search(req: Request, res: Response, next: NextFunction){
     let data: Filters =  req.body.data;
-    if ( data !== undefined){
-        if (data.page !== undefined){
-            const products = await Product.search(data);
-            res.status(200);
-            return res.json({
-                data:{
-                    products: products
-                }
-            });
-        }else{
-            res.status(422);
-            return next({error: new Error("Must provide page number.")});
-        }
+    if (data.page !== undefined){
+        const products = await Product.search(data);
+        res.status(200);
+        return res.json({
+            data:{
+                products: products
+            }
+        });
     }else{
-        res.status(400);
-        return next({error:new Error("Must provide product data.")});
+        res.status(422);
+        return next({error: new Error("Must provide page number.")});
     }
 }
 

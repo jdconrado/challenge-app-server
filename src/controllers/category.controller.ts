@@ -1,4 +1,5 @@
 import {Request, Response, NextFunction} from "express";
+import { getConnection } from "typeorm";
 import {validate} from "class-validator";
 import Category from "../entities/Category";
 
@@ -10,7 +11,7 @@ interface categoryInterface{
 
 async function createCategory(req: Request, res: Response, next: NextFunction) {
     const data : categoryInterface = req.body.data;
-    if ( data !== undefined && data.name !== undefined){
+    if (data.name !== undefined){
 
         const exists = await Category.findOne({name: data.name.trim()});
         if (exists !== undefined){
@@ -27,6 +28,7 @@ async function createCategory(req: Request, res: Response, next: NextFunction) {
         }else{
             try {
                 await category.save();
+                await getConnection().queryResultCache!.remove(["categories"]);
                 res.status(200);
                 return res.json({
                     data:{

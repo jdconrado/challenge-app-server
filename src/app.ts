@@ -56,7 +56,7 @@ function errorHandler (error: {error: Error, errorList?: any} | Error, req: Requ
 app.use(notFound);
 app.use(errorHandler);
 
-const port = process.env.PORT || 3000;
+const port = 3000;
 
 async function start() {
     // Retry Logic For docker
@@ -64,7 +64,7 @@ async function start() {
     let connected: boolean = false;
     while(retry>0 && ! connected){
         createConnection().then( (): void=>{
-            app.listen(port, () : void=>{
+            app.listen(port,'0.0.0.0', () : void=>{
                 console.log(`${new Date().toISOString()} - Service started on port ${port}`);
             });
             connected = true;

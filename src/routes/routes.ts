@@ -11,10 +11,9 @@ const router : Router = express.Router();
 router.use("/auth", auth);
 
 //protected routes
-router.use(requireProtected);
 
-router.use("/user", users);
-router.use("/product", products);
-router.use("/category", category)
+router.use("/user", requireProtected,  users);
+router.use("/product", requireProtected, products);
+router.use("/category", requireProtected, category)
 
 export default router;

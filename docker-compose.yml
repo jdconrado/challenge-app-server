@@ -1,0 +1,33 @@
+version: 3.8
+services:
+  db:
+    image:  postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: vesta_password
+      POSTGRES_USER: vesta_user
+      POSTGRES_DB: vesta
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    restart: always
+    expose:
+      - 6379
+
+  challenge:
+    build: .
+    restart: always
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: db://vesta_user:vesta_password@postgres:5432/vesta
+      NODE_ENV: PRODUCTION
+      COOKIE_SECRET: zRjffya9CFS1GUfevUIHYJ9HdV0lZS9MChangeLater
+      JWT_SECRET: Tb8GkeYyuaSzV2bCc1wuq5WgviIWV6NYChangeLater
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports: 
+      - "5000:3000"

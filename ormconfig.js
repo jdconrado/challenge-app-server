@@ -36,10 +36,10 @@ const production = {
         }
     },
     entities: [
-        "dist/entities/**/*.ts"
+        "dist/entities/**/*.js"
     ],
     migrations: [
-        "dist/migration/**/*.ts"
+        "dist/migration/**/*.js"
     ],
     cli: {
         entitiesDir: "dist/entities",

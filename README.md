@@ -38,6 +38,7 @@ Se necesita autenticación para las siguientes rutas:
 
 **Notas:**
 
+* Se usa NGINX con proxy pass.
 * Se usa autenticación por medio de cookies.
 * Se usa JWT como estratégia de autenticación.
 * El servicio de autenticación es simple.
